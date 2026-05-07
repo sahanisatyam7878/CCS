@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Academy</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lato:wght@400;700&family=Merriweather:wght@400;700&family=Nunito:wght@400;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="topnav">
+    <div class="topnav-row topnav-top">
+        <div class="left-controls">
+            <input type="text" placeholder="Search..." class="search-box">
+            <button type="button" class="exam-nav-btn" onclick="openExamPanel()">Practice & Exam</button>
+            <label class="font-picker" for="fontSelect">
+                <span>Font</span>
+                <select id="fontSelect" onchange="changeSiteFont(this.value)">
+                    <option value="Inter">Inter</option>
+                   <option value="Inter">Times New Roman</option>
+                    <option value="Nunito">Nunito</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Lato">Lato</option>
+                    <option value="Merriweather">Merriweather</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="nav-right">
+            <div class="dark-container">
+                <button type="button" onclick="toggleDarkMode()" class="dark-btn" aria-label="Toggle dark mode">
+                    <span id="modeIcon">Moon</span>
+                </button>
+                <span class="mode-tooltip" id="modeText">Switch Dark Mode</span>
+            </div>
+
+            <button type="button" class="login-btn" onclick="openLogin()">Sign Up</button>
+        </div>
+    </div>
+
+    <div class="topnav-row topnav-bottom">
+        <div class="nav-center" aria-label="Course navigation">
+            <span class="nav-section-title">Courses</span>
+            {% for course in courses %}
+            <button
+                type="button"
+                class="course-nav-btn"
+                data-course-title="{{ course.title }}"
+                onclick="loadCourse('{{ course.title }}', event)"
+            >
+                {{ course.title }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <p class="sidebar-label">Course Guide</p>
+            <h3 id="sidebarTitle">Topics</h3>
+            <p class="sidebar-help" id="sidebarHelp">Choose a course from the top menu to see its lessons here.</p>
+        </div>
+        <div class="sidebar-topics">
+            <div class="sidebar-topics-head">
+                <span>Lesson List</span>
+                <span class="topic-count" id="topicCount">0</span>
+            </div>
+            <ul id="topicList">
+                <li class="empty-topic">Select a course</li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="content" id="content">
+        <div id="homeContent">
+            <section class="hero">
+                <p class="eyebrow">Beginner Friendly Computer Learning</p>
+                <h1>Welcome to Code Academy</h1>
+                <p>Choose a course to start learning computer skills, office tools, internet basics, and programming.</p>
+                <div class="hero-image">
+                    <img src="{{ url_for('static', filename='images/parts2.jpg') }}" alt="Computers and digital learning">
+                </div>
+            </section>
+
+            <section class="cards">
+                <div class="card course-card" onclick="loadCourse('Computer Basics')">
+                    <span class="card-icon">Basics</span>
+                    <h3>Computer Basics</h3>
+                    <p>Start with the foundations of computers, hardware, software, and storage.</p>
+                </div>
+
+                <div class="card course-card" onclick="loadCourse('MS Office')">
+                    <span class="card-icon">Office</span>
+                    <h3>MS Office</h3>
+                    <p>Learn Word, Excel, PowerPoint, and day-to-day office productivity skills.</p>
+                </div>
+
+                <div class="card course-card" onclick="loadCourse('Internet & Email')">
+                    <span class="card-icon">Web</span>
+                    <h3>Internet &amp; Email</h3>
+                    <p>Understand browsing, online safety, email basics, and internet tools.</p>
+                </div>
+
+                <div class="card course-card" onclick="loadCourse('C / C++')">
+                    <span class="card-icon">C/C++</span>
+                    <h3>C / C++</h3>
+                    <p>Learn C and C++ programming concepts with examples, syntax, and long explanations.</p>
+                </div>
+            </section>
+
+            <section class="exam-panel" id="examPanel" aria-label="Exam panel">
+                <div class="exam-panel-main">
+                    <div>
+                        <p class="eyebrow">Practice & Exam</p>
+                        <h2>Exam Preparation Panel</h2>
+                        <p>
+                            Prepare for computer course tests with quick practice, topic revision, and beginner-friendly
+                            mock exam tasks.
+                        </p>
+                    </div>
+
+                    <div class="exam-actions">
+                        <button type="button" class="exam-primary-btn" onclick="startExamPractice('Computer Basics')">Start Practice</button>
+                        <button type="button" class="exam-secondary-btn" onclick="loadCourse('Computer Basics')">Revise Topics</button>
+                    </div>
+                </div>
+
+                <div class="exam-grid">
+                    <div class="exam-card exam-card-highlight">
+                        <span class="exam-badge">Mock Test</span>
+                        <h3>All Course Test Papers</h3>
+                        <p>Every course includes a separate 20-question mock test with timer and instant result.</p>
+                        <div class="exam-meta">
+                            <span>20 Questions</span>
+                            <span>10 Minutes</span>
+                            <span>Beginner</span>
+                        </div>
+                    </div>
+
+                    <div class="exam-card">
+                        <span class="exam-badge">Office Skills</span>
+                        <h3>MS Office Practice</h3>
+                        <p>Revise Word, Excel, and PowerPoint basics before attempting the office tools test.</p>
+                        <div class="exam-progress">
+                            <span>Preparation</span>
+                            <strong>72%</strong>
+                        </div>
+                        <div class="progress-bar">
+                            <span style="width:72%;"></span>
+                        </div>
+                    </div>
+
+                    <div class="exam-card">
+                        <span class="exam-badge">Quick Revision</span>
+                        <h3>Select Test Paper</h3>
+                        <div class="exam-topic-list">
+                            <button type="button" onclick="startExamPractice('Computer Basics')">Computer Basics</button>
+                            <button type="button" onclick="startExamPractice('MS Office')">MS Office</button>
+                            <button type="button" onclick="startExamPractice('Internet & Email')">Internet & Email</button>
+                            <button type="button" onclick="startExamPractice('HTML')">HTML</button>
+                            <button type="button" onclick="startExamPractice('CSS')">CSS</button>
+                            <button type="button" onclick="startExamPractice('JavaScript')">JavaScript</button>
+                            <button type="button" onclick="startExamPractice('Python')">Python</button>
+                            <button type="button" onclick="startExamPractice('C / C++')">C / C++</button>
+                            <button type="button" onclick="startExamPractice('Database (MySQL)')">MySQL</button>
+                            <button type="button" onclick="startExamPractice('Full Stack Development')">Full Stack</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="feature-strip">
+                <div class="feature-box">
+                    <h3>Simple Lessons</h3>
+                    <p>Each topic is broken into short, readable sections so beginners can learn step by step.</p>
+                </div>
+                <div class="feature-box">
+                    <h3>Clear Topic Menu</h3>
+                    <p>The side panel keeps all lessons visible so moving between chapters feels fast and easy.</p>
+                </div>
+                <div class="feature-box">
+                    <h3>Practice Friendly</h3>
+                    <p>Course pages are designed to feel like a learning website, not just a plain information page.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<div id="loginModal" class="modal auth-modal" aria-hidden="true">
+    <div class="modal-box auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <button type="button" class="close-btn" onclick="closeLogin()" aria-label="Close login modal">&times;</button>
+
+        <div class="auth-intro">
+            <span class="auth-badge">Student Portal</span>
+            <h2 id="authTitle">Create your account</h2>
+            <p id="authSubtitle">Register to save your learning progress and practice exam access.</p>
+        </div>
+
+        <div class="auth-tabs" role="tablist" aria-label="Account options">
+            <button type="button" id="registerTab" class="active" onclick="showRegister()">Sign Up</button>
+            <button type="button" id="loginTab" onclick="showLogin()">Login</button>
+        </div>
+
+        <div id="authMessage" class="auth-message" aria-live="polite"></div>
+
+        <div id="registerForm" class="auth-form">
+            <label for="regUsername">Username</label>
+            <input type="text" id="regUsername" placeholder="Enter username" autocomplete="username">
+
+            <label for="regPassword">Password</label>
+            <input type="password" id="regPassword" placeholder="Minimum 4 characters" autocomplete="new-password">
+
+            <label for="regConfirmPassword">Confirm Password</label>
+            <input type="password" id="regConfirmPassword" placeholder="Repeat password" autocomplete="new-password">
+
+            <button type="button" class="auth-submit" onclick="registerUser()">Create Account</button>
+            <p class="auth-switch-text">Already registered? <button type="button" onclick="showLogin()">Login here</button></p>
+        </div>
+
+        <div id="loginForm" class="auth-form" style="display:none;">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter username" autocomplete="username">
+
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
+
+            <button type="button" class="auth-submit" onclick="loginUser()">Login</button>
+            <p class="auth-switch-text">New student? <button type="button" onclick="showRegister()">Create account</button></p>
+        </div>
+    </div>
+</div>
+
+<div id="examModal" class="modal exam-modal">
+    <div class="exam-modal-box">
+        <button type="button" class="close-btn" onclick="closeExamPractice()" aria-label="Close exam modal">x</button>
+
+        <div class="exam-modal-head">
+            <div>
+                <p class="eyebrow">Mock Test</p>
+                <h2 id="examTitle">Computer Basics Exam</h2>
+            </div>
+            <div class="exam-timer" id="examTimer">10:00</div>
+        </div>
+
+        <div id="examResult" class="exam-result" style="display:none;"></div>
+
+        <div id="examBody">
+            <div class="exam-status">
+                <span id="examQuestionNumber">Question 1 of 20</span>
+                <span id="examAnsweredCount">Answered 0/20</span>
+            </div>
+
+            <div class="exam-question-box">
+                <h3 id="examQuestionText"></h3>
+                <div id="examOptions" class="exam-options"></div>
+            </div>
+
+            <div class="exam-question-map" id="examQuestionMap"></div>
+
+            <div class="exam-controls">
+                <button type="button" class="exam-secondary-btn" onclick="previousExamQuestion()">Previous</button>
+                <button type="button" class="exam-secondary-btn" onclick="nextExamQuestion()">Next</button>
+                <button type="button" class="exam-primary-btn" onclick="submitExam()">Submit Exam</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.appImagePaths = {
+    computerIntro: "{{ url_for('static', filename='images/Introduction-to-computers.png') }}",
+    computerScene: "{{ url_for('static', filename='images/parts2.jpg') }}",
+    componentsDiagram: "{{ url_for('static', filename='images/components-diagram-red-clean.png') }}",
+    oldComputerParts: "{{ url_for('static', filename='images/external-computer.jpg') }}",
+    historyComputer: "{{ url_for('static', filename='images/evolution_of_computers.jpg') }}",
+    typesComputer: "{{ url_for('static', filename='images/maxresdefault.jpg') }}",
+    cpuImage: "{{ url_for('static', filename='images/cpu.jpg') }}",
+    cpuPartsImage: "{{ url_for('static', filename='images/parts-of-cpu.jpg') }}",
+    hardwareComponents: "{{ url_for('static', filename='images/Computer-Hardware-Central-Processing-Unit.jpg') }}",
+    partsOverview: "{{ url_for('static', filename='images/imgae .jpg') }}",
+    softwareImage: "{{ url_for('static', filename='images/software_image.jpg') }}",
+    officeIntroImage: "{{ url_for('static', filename='images/ms_office.jpg') }}",
+    wordImage: "{{ url_for('static', filename='images/WORD.png') }}",
+    internetIntro: "{{ url_for('static', filename='images/TheInternet_1024x1024.jpg') }}",
+    internetConnectionsImage: "{{ url_for('static', filename='images/modes_of_connection.jpgg.webp') }}",
+    webBrowserImage: "{{ url_for('static', filename='images/TheInternet_1024x1024.jpg') }}",
+    searchEngineImage: "{{ url_for('static', filename='images/TheInternet_1024x1024.jpg') }}",
+    internetSafetyImage: "{{ url_for('static', filename='images/TheInternet_1024x1024.jpg') }}",
+    emailIntroImage: "{{ url_for('static', filename='images/TheInternet_1024x1024.jpg') }}",
+    htmlIntroImage: "{{ url_for('static', filename='images/sddefault.jpg') }}",
+    cssOverviewImage: "{{ url_for('static', filename='images/CSS-Syntax.jpg') }}",
+    wordTipsImage: "{{ url_for('static', filename='images/Microsoft Word tips.jpg') }}",
+    wordToolsImage: "{{ url_for('static', filename='images/maxresdefault (1).jpg') }}",
+    excelImage: "{{ url_for('static', filename='images/excel.png') }}",
+    excelHomeImage: "{{ url_for('static', filename='images/Excel-Home.png') }}",
+    excelFeaturesImage: "{{ url_for('static', filename='images/Excel-3.jpg') }}",
+    powerpointImage: "{{ url_for('static', filename='images/powerpoint.png') }}",
+    powerpointInterfaceImage: "{{ url_for('static', filename='images/Untitled.png') }}",
+    powerpointTemplateImage: "{{ url_for('static', filename='images/77powerpoint1.jpg') }}",
+    inputDevicesImage: "{{ url_for('static', filename='images/Input-Devices.png') }}",
+    memory: "{{ url_for('static', filename='images/memory.jpg') }}",
+    memoryTypes: "{{ url_for('static', filename='images/types_of_computer_memory.jpg') }}",
+    outputDevice: "{{ url_for('static', filename='images/outputdevice.jpg') }}",
+    pythonIntro: "{{ url_for('static', filename='images/introduction-to-python.jpg') }}",
+    pythonFeatures: "{{ url_for('static', filename='images/Features-of-Python.jpg') }}",
+    pythonCode: "{{ url_for('static', filename='images/python-introduction-2-1680253252.webp') }}",
+    javascriptIntro: "{{ url_for('static', filename='images/javascript-features.png') }}",
+    javascriptHistory: "{{ url_for('static', filename='images/JavaScript-Frameworks-and-Libraries.jpg') }}",
+    javascriptFeatures: "{{ url_for('static', filename='images/javascript-features.png') }}",
+    javascriptFrameworks: "{{ url_for('static', filename='images/JavaScript-Frameworks-and-Libraries.jpg') }}",
+    mysqlOverviewImage: "{{ url_for('static', filename='images/database-mysql-overview.svg') }}",
+    parts: "{{ url_for('static', filename='images/parts.jpg') }}"
+};
+</script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+<script>
+function openLogin() {
+    const modal = document.getElementById("loginModal");
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden", "false");
+    showRegister();
+}
+
+function closeLogin() {
+    const modal = document.getElementById("loginModal");
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+    showAuthMessage("");
+}
+
+function showRegister() {
+    document.getElementById("registerForm").style.display = "block";
+    document.getElementById("loginForm").style.display = "none";
+    document.getElementById("registerTab").classList.add("active");
+    document.getElementById("loginTab").classList.remove("active");
+    document.getElementById("authTitle").innerText = "Create your account";
+    document.getElementById("authSubtitle").innerText = "Register to save your learning progress and practice exam access.";
+    showAuthMessage("");
+}
+
+function showLogin() {
+    document.getElementById("registerForm").style.display = "none";
+    document.getElementById("loginForm").style.display = "block";
+    document.getElementById("loginTab").classList.add("active");
+    document.getElementById("registerTab").classList.remove("active");
+    document.getElementById("authTitle").innerText = "Welcome back";
+    document.getElementById("authSubtitle").innerText = "Login and continue your computer course practice.";
+    showAuthMessage("");
+}
+
+function showAuthMessage(message, type = "") {
+    const box = document.getElementById("authMessage");
+    box.innerText = message;
+    box.className = `auth-message ${type}`;
+}
+
+async function registerUser() {
+    const user = document.getElementById("regUsername").value.trim();
+    const pass = document.getElementById("regPassword").value.trim();
+    const confirmPass = document.getElementById("regConfirmPassword").value.trim();
+
+    if (!user || !pass) {
+        showAuthMessage("Please enter username and password.", "error");
+        return;
+    }
+
+    if (pass.length < 4) {
+        showAuthMessage("Password must be at least 4 characters.", "error");
+        return;
+    }
+
+    if (pass !== confirmPass) {
+        showAuthMessage("Password and confirm password do not match.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            showAuthMessage(result.error || "Registration failed.", "error");
+            return;
+        }
+
+        document.getElementById("username").value = user;
+        document.getElementById("password").value = "";
+        document.getElementById("regPassword").value = "";
+        document.getElementById("regConfirmPassword").value = "";
+        showLogin();
+        showAuthMessage(result.message || "Account created successfully. Please login.", "success");
+    } catch (error) {
+        showAuthMessage("Server connection failed. Please try again.", "error");
+    }
+}
+
+async function loginUser() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+
+    if (!user || !pass) {
+        showAuthMessage("Please enter username and password.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            showAuthMessage(result.error || "Wrong username or password.", "error");
+            return;
+        }
+
+        sessionStorage.setItem("loggedInUser", JSON.stringify(result.user));
+        showAuthMessage(result.message || "Login successful.", "success");
+        setTimeout(closeLogin, 450);
+    } catch (error) {
+        showAuthMessage("Server connection failed. Please try again.", "error");
+    }
+}
+
+function openExamPanel() {
+    const content = document.getElementById("content");
+
+    if (!document.getElementById("examPanel") && typeof goHome === "function") {
+        goHome();
+    }
+
+    setTimeout(() => {
+        const examPanel = document.getElementById("examPanel");
+        if (examPanel) {
+            examPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+            examPanel.classList.add("exam-panel-focus");
+            setTimeout(() => examPanel.classList.remove("exam-panel-focus"), 1200);
+        } else if (content) {
+            content.scrollTop = 0;
+        }
+    }, 50);
+}
+
+function changeSiteFont(fontName) {
+    const fontMap = {
+        Inter: '"Inter", "Segoe UI", Arial, sans-serif',
+        Nunito: '"Nunito", "Segoe UI", Arial, sans-serif',
+        Roboto: '"Roboto", "Segoe UI", Arial, sans-serif',
+        Lato: '"Lato", "Segoe UI", Arial, sans-serif',
+        Merriweather: '"Merriweather", Georgia, serif'
+    };
+
+    document.documentElement.style.setProperty("--site-font", fontMap[fontName] || fontMap.Inter);
+    localStorage.setItem("selectedSiteFont", fontName);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    const savedFont = localStorage.getItem("selectedSiteFont") || "Inter";
+    const fontSelect = document.getElementById("fontSelect");
+
+    if (fontSelect) {
+        fontSelect.value = savedFont;
+    }
+
+    changeSiteFont(savedFont);
+});
+
+const q = (question, options, answer) => ({ question, options, answer });
+
+const examQuestionBanks = {
+    "Computer Basics": [
+        q("What is a computer?", ["An electronic machine that processes data", "Only a typing machine", "Only a storage box", "A power supply device"], 0),
+        q("CPU stands for:", ["Central Program Unit", "Central Processing Unit", "Computer Power Unit", "Control Processing Utility"], 1),
+        q("Which part is called the brain of the computer?", ["Monitor", "Keyboard", "CPU", "Printer"], 2),
+        q("Which device is used to type data?", ["Monitor", "Keyboard", "Speaker", "Printer"], 1),
+        q("Which one is an output device?", ["Mouse", "Scanner", "Keyboard", "Monitor"], 3),
+        q("RAM is a type of:", ["Temporary memory", "Permanent storage only", "Output device", "Printing device"], 0),
+        q("ROM stands for:", ["Read Only Memory", "Random Output Memory", "Run Only Machine", "Read Open Module"], 0),
+        q("Which memory loses data when power is off?", ["ROM", "RAM", "Hard Disk", "SSD"], 1),
+        q("Which CPU unit performs calculations?", ["CU", "ALU", "RAM", "ROM"], 1),
+        q("Which CPU unit controls operations?", ["Control Unit", "Printer Unit", "Storage Unit", "Display Unit"], 0),
+        q("Which one is software?", ["Keyboard", "Mouse", "MS Word", "Monitor"], 2),
+        q("Which one is hardware?", ["Windows", "MS Word", "Keyboard", "Browser"], 2),
+        q("Input means:", ["Showing result", "Entering data", "Printing page", "Deleting file"], 1),
+        q("Output means:", ["Processed result", "Typing command", "Only saving data", "Only charging power"], 0),
+        q("Which is a storage device?", ["Speaker", "Hard Disk", "Mouse", "Scanner"], 1),
+        q("SSD is used for:", ["Data storage", "Sound output", "Typing", "Display"], 0),
+        q("A monitor displays:", ["Input", "Output", "Power", "Network only"], 1),
+        q("A mouse is used to:", ["Print pages", "Point and select", "Store files", "Supply power"], 1),
+        q("A printer gives:", ["Soft copy", "Hard copy", "Temporary memory", "Program code"], 1),
+        q("Correct working cycle is:", ["Input -> Processing -> Output -> Storage", "Output -> Input -> Delete", "Print -> Save -> Type", "Storage -> Print -> Shut down"], 0)
+    ],
+    "MS Office": [
+        q("MS Office is a:", ["Productivity software suite", "Computer hardware", "Operating system only", "Search engine"], 0),
+        q("Which program is used for documents?", ["MS Word", "MS Excel", "PowerPoint", "Access"], 0),
+        q("Which program is used for spreadsheets?", ["MS Word", "MS Excel", "PowerPoint", "Paint"], 1),
+        q("Which program creates presentations?", ["Outlook", "PowerPoint", "WordPad", "Notepad"], 1),
+        q("MS Word files are mainly used for:", ["Letters and reports", "Only games", "Only videos", "Only antivirus"], 0),
+        q("MS Excel is best for:", ["Calculations and tables", "Slide show only", "Typing stories only", "Playing music"], 0),
+        q("PowerPoint uses pages called:", ["Cells", "Slides", "Rows", "Records"], 1),
+        q("Save command is used to:", ["Store work", "Delete work", "Print only", "Close computer"], 0),
+        q("Print command creates:", ["Hard copy", "RAM", "Formula", "Slide transition"], 0),
+        q("Ctrl + S is used for:", ["Save", "Search", "Sort", "Slide show"], 0),
+        q("Ctrl + P is used for:", ["Paste", "Print", "Preview only", "Paragraph"], 1),
+        q("Spell check helps to find:", ["Spelling mistakes", "CPU speed", "Internet speed", "Printer ink"], 0),
+        q("Header appears at the:", ["Top of page", "Bottom of page", "Middle only", "Recycle bin"], 0),
+        q("Footer appears at the:", ["Top of page", "Bottom of page", "Desktop", "Formula bar"], 1),
+        q("A table contains:", ["Rows and columns", "Only pictures", "Only videos", "Only shortcuts"], 0),
+        q("Which is an email and calendar app in Office?", ["Outlook", "Excel", "Paint", "VLC"], 0),
+        q("OneNote is used for:", ["Notes", "Printing only", "Deleting files", "Formatting disk"], 0),
+        q("A template is:", ["Ready-made design", "Computer virus", "Storage chip", "Power cable"], 0),
+        q("Office documents can often be exported as:", ["PDF", "CPU", "RAM", "Mouse"], 0),
+        q("MS Office skills are useful for:", ["School and office work", "Only gaming", "Only hardware repair", "Only electricity"], 0)
+    ],
+    "Internet & Email": [
+        q("Internet is a:", ["Global network", "Single computer", "Printer cable", "Keyboard type"], 0),
+        q("A web browser is used to:", ["Open websites", "Print circuits", "Store RAM", "Charge laptop"], 0),
+        q("Which is a browser?", ["Chrome", "Excel", "Word", "PowerPoint"], 0),
+        q("A search engine helps to:", ["Find information", "Increase RAM", "Repair keyboard", "Print books only"], 0),
+        q("Which is a search engine?", ["Google", "Mouse", "CPU", "Monitor"], 0),
+        q("URL means:", ["Web address", "Keyboard button", "Printer ink", "RAM type"], 0),
+        q("Email is used to:", ["Send digital messages", "Format hard disk", "Display output", "Cool CPU"], 0),
+        q("Gmail is a service for:", ["Email", "Typing only", "Hardware testing", "Photo editing only"], 0),
+        q("Attachment means:", ["File added to email", "Computer table", "Monitor cable", "CPU fan"], 0),
+        q("CC in email is used to:", ["Send copy to others", "Clear cache only", "Close computer", "Create chart"], 0),
+        q("BCC hides recipients from:", ["Other recipients", "Computer CPU", "Printer", "Browser"], 0),
+        q("A strong password should be:", ["Hard to guess", "Only 1234", "Same as name", "Blank"], 0),
+        q("Spam email means:", ["Unwanted email", "Important certificate", "Saved document", "Browser history"], 0),
+        q("Phishing tries to steal:", ["Personal information", "Keyboard keys", "Monitor color", "Mouse speed"], 0),
+        q("Downloading means:", ["Getting file from internet", "Sending file to internet", "Deleting file", "Printing file"], 0),
+        q("Uploading means:", ["Sending file to internet", "Opening calculator", "Changing wallpaper", "Shutting down"], 0),
+        q("Cloud storage example is:", ["Google Drive", "Keyboard", "Speaker", "CPU"], 0),
+        q("Wi-Fi is used for:", ["Wireless internet connection", "Printing paper only", "Typing data", "Cooling system"], 0),
+        q("HTTPS generally indicates:", ["Secure website connection", "Low battery", "Printer error", "RAM full"], 0),
+        q("Safe internet habit is:", ["Avoid suspicious links", "Share passwords", "Open unknown files", "Ignore updates"], 0)
+    ],
+    "HTML": [
+        q("HTML stands for:", ["HyperText Markup Language", "HighText Machine Language", "Hyper Tool Main Link", "Home Tab Mark Language"], 0),
+        q("HTML is used to create:", ["Web page structure", "CPU circuits", "Printer ink", "Database server only"], 0),
+        q("HTML tags are written inside:", ["Angle brackets", "Curly braces only", "Square paper", "Quotes only"], 0),
+        q("Which tag creates a paragraph?", ["<p>", "<h1>", "<img>", "<table>"], 0),
+        q("Which tag creates the largest heading?", ["<h1>", "<p>", "<br>", "<a>"], 0),
+        q("Which tag inserts an image?", ["<img>", "<a>", "<ul>", "<body>"], 0),
+        q("Which tag creates a link?", ["<a>", "<li>", "<tr>", "<head>"], 0),
+        q("The visible page content goes inside:", ["<body>", "<head>", "<title>", "<meta>"], 0),
+        q("The page title is written in:", ["<title>", "<p>", "<img>", "<footer>"], 0),
+        q("Line break tag is:", ["<br>", "<hr>", "<li>", "<ol>"], 0),
+        q("Ordered list tag is:", ["<ol>", "<ul>", "<li>", "<div>"], 0),
+        q("Unordered list tag is:", ["<ul>", "<ol>", "<a>", "<span>"], 0),
+        q("List item tag is:", ["<li>", "<list>", "<item>", "<row>"], 0),
+        q("Table row tag is:", ["<tr>", "<td>", "<table>", "<th>"], 0),
+        q("Table data cell tag is:", ["<td>", "<tr>", "<h1>", "<body>"], 0),
+        q("HTML comment starts with:", ["<!--", "//", "#", "/*"], 0),
+        q("The href attribute is used in:", ["Links", "Images only", "Tables only", "Paragraphs only"], 0),
+        q("The src attribute is used for:", ["Image source", "Link text", "Font size only", "Page title"], 0),
+        q("Semantic HTML helps with:", ["Meaning and structure", "Only colors", "Only storage", "Only calculations"], 0),
+        q("HTML file extension is usually:", [".html", ".exe", ".jpg", ".xlsx"], 0)
+    ],
+    "CSS": [
+        q("CSS stands for:", ["Cascading Style Sheets", "Computer Style System", "Creative Sheet Script", "Code Server Style"], 0),
+        q("CSS is used for:", ["Styling web pages", "Storing database", "Writing Python", "Creating hardware"], 0),
+        q("Which property changes text color?", ["color", "font-size", "margin", "display"], 0),
+        q("Which property changes background color?", ["background-color", "text-align", "padding", "border-radius"], 0),
+        q("Which property changes font size?", ["font-size", "color", "height", "width"], 0),
+        q("Margin controls:", ["Outer space", "Inner space", "Text color", "Image path"], 0),
+        q("Padding controls:", ["Inner space", "Outer space", "Browser title", "Link address"], 0),
+        q("Border-radius is used for:", ["Rounded corners", "Text bold", "Page link", "Table row"], 0),
+        q("Class selector starts with:", [".", "#", "@", "*"], 0),
+        q("ID selector starts with:", ["#", ".", ":", "$"], 0),
+        q("Flexbox is used for:", ["Layout alignment", "Database query", "Image upload", "CPU speed"], 0),
+        q("Grid is used for:", ["Two-dimensional layout", "Only audio", "Only passwords", "Only comments"], 0),
+        q("Which value hides an element?", ["display: none", "color: none", "font: none", "link: none"], 0),
+        q("Which property controls width?", ["width", "margin", "color", "font-family"], 0),
+        q("Which property controls height?", ["height", "padding", "border", "text"], 0),
+        q("Hover effect uses:", [":hover", ":click", ":focus-only", ":mouse"], 0),
+        q("Media query is used for:", ["Responsive design", "Email sending", "Database backup", "Virus scan"], 0),
+        q("External CSS is linked using:", ["<link>", "<script>", "<img>", "<table>"], 0),
+        q("Inline CSS is written in:", ["style attribute", "src attribute", "href only", "alt only"], 0),
+        q("CSS comments use:", ["/* comment */", "<!-- comment -->", "// comment", "# comment"], 0)
+    ],
+    "JavaScript": [
+        q("JavaScript is mainly used to make web pages:", ["Interactive", "Only printed", "Only stored", "Only colored"], 0),
+        q("Which keyword declares a variable?", ["let", "echo", "print", "select"], 0),
+        q("Which value means true or false?", ["Boolean", "String", "Array only", "Image"], 0),
+        q("Text data is called:", ["String", "Loop", "Function", "Object only"], 0),
+        q("Which symbol is used for strict equality?", ["===", "=", "!=", "=>"], 0),
+        q("An array stores:", ["Multiple values", "Only one color", "Only one file", "Only CSS"], 0),
+        q("Function is used to:", ["Reuse code", "Delete browser", "Add RAM", "Print keyboard"], 0),
+        q("Which method shows a popup message?", ["alert()", "print()", "style()", "table()"], 0),
+        q("Which method selects an element by id?", ["getElementById", "getByClassOnly", "selectHTML", "findCSS"], 0),
+        q("Event onclick runs when user:", ["Clicks", "Types password only", "Prints page", "Closes CPU"], 0),
+        q("A loop is used to:", ["Repeat code", "Color text only", "Create image only", "Save file only"], 0),
+        q("Which loop is common in JavaScript?", ["for", "repeat-only", "again", "go"], 0),
+        q("if statement is used for:", ["Decision making", "Image size only", "Printing paper", "Sound output"], 0),
+        q("console.log() is used for:", ["Debug output", "Email sending", "Image editing", "CSS styling only"], 0),
+        q("DOM stands for:", ["Document Object Model", "Data Output Machine", "Design Object Mode", "Digital Office Module"], 0),
+        q("Which operator adds numbers?", ["+", "&", "@", "#"], 0),
+        q("NaN means:", ["Not a Number", "New array name", "No active network", "Normal app node"], 0),
+        q("setInterval is used to:", ["Run code repeatedly by time", "Create table", "Change font only", "Delete file"], 0),
+        q("JSON is used for:", ["Data format", "Keyboard shortcut", "Printer setting", "CSS layout"], 0),
+        q("JavaScript file extension is:", [".js", ".css", ".html", ".py"], 0)
+    ],
+    "Python": [
+        q("Python is a:", ["Programming language", "Web browser", "Hardware device", "Printer type"], 0),
+        q("Which function displays output?", ["print()", "show()", "display()", "echo() only"], 0),
+        q("Text in Python is called:", ["String", "Loop", "List only", "Comment"], 0),
+        q("Which symbol starts a comment?", ["#", "//", "<!--", "/*"], 0),
+        q("A variable is used to:", ["Store data", "Print page only", "Open monitor", "Delete CPU"], 0),
+        q("Which data type stores whole numbers?", ["int", "str", "list", "bool only"], 0),
+        q("Which data type stores decimal numbers?", ["float", "int", "dict", "tuple only"], 0),
+        q("Which data type stores True or False?", ["bool", "str", "float", "set"], 0),
+        q("A list is written using:", ["[]", "{}", "<>", "() only"], 0),
+        q("A dictionary stores:", ["Key-value pairs", "Only images", "Only loops", "Only comments"], 0),
+        q("if is used for:", ["Decision making", "Image editing", "Hardware repair", "Printing only"], 0),
+        q("for loop is used to:", ["Repeat over items", "Only save files", "Only type text", "Only color cells"], 0),
+        q("Which keyword defines a function?", ["def", "function", "make", "new"], 0),
+        q("input() is used to:", ["Take user input", "Print only", "Create table", "Open browser"], 0),
+        q("len() is used to find:", ["Length", "Color", "Speed", "File type only"], 0),
+        q("Which operator is used for addition?", ["+", "-", "*", "/"], 0),
+        q("Which operator is used for multiplication?", ["*", "+", "=", "% only"], 0),
+        q("Python files usually end with:", [".py", ".html", ".css", ".docx"], 0),
+        q("Indentation in Python is important for:", ["Code blocks", "Changing monitor", "Adding RAM", "Sending email only"], 0),
+        q("Which is a Python collection type?", ["List", "Monitor", "Keyboard", "Printer"], 0)
+    ],
+    "C / C++": [
+        q("C and C++ are:", ["Programming languages", "Search engines", "Printers", "Browsers"], 0),
+        q("Which header is common in C?", ["stdio.h", "style.css", "index.html", "script.js"], 0),
+        q("C program execution starts from:", ["main()", "start()", "run()", "begin() only"], 0),
+        q("printf is used to:", ["Display output", "Take input", "Create class", "Sort data only"], 0),
+        q("scanf is used to:", ["Take input", "Show output", "Make chart", "Open file only"], 0),
+        q("int stores:", ["Whole numbers", "Text only", "Images", "Audio"], 0),
+        q("float stores:", ["Decimal numbers", "Only characters", "Only rows", "Only files"], 0),
+        q("char stores:", ["Single character", "Large table", "Whole website", "Database"], 0),
+        q("Which operator assigns value?", ["=", "==", "!=", "++"], 0),
+        q("Which operator checks equality?", ["==", "=", "+", "--"], 0),
+        q("if statement is used for:", ["Decision making", "Printing only", "Deleting screen", "Adding image"], 0),
+        q("for loop is used for:", ["Repeated execution", "Only comments", "Only storage", "Only layout"], 0),
+        q("Array stores:", ["Multiple values of same type", "Only one letter", "Only keyboard input", "Only HTML"], 0),
+        q("C++ supports:", ["Object-oriented programming", "Only typing", "Only painting", "Only browsing"], 0),
+        q("Class is a blueprint for:", ["Objects", "Printers", "Emails", "Rows"], 0),
+        q("Object is an instance of:", ["Class", "Monitor", "Keyboard", "Database only"], 0),
+        q("cout is used in C++ for:", ["Output", "Input", "Loop", "Comment"], 0),
+        q("cin is used in C++ for:", ["Input", "Output", "Class", "Header only"], 0),
+        q("C/C++ statements usually end with:", ["Semicolon", "Comma only", "Colon only", "Full stop"], 0),
+        q("Compiler converts code into:", ["Machine understandable form", "Image", "Spreadsheet", "Slide"], 0)
+    ],
+    "Database (MySQL)": [
+        q("Database is used to:", ["Store organized data", "Display monitor", "Type letters", "Cool CPU"], 0),
+        q("MySQL is a:", ["Database management system", "Word processor", "Presentation tool", "Browser"], 0),
+        q("SQL stands for:", ["Structured Query Language", "Simple Question List", "System Queue Link", "Style Query Layout"], 0),
+        q("Table contains:", ["Rows and columns", "Slides and themes", "Only pictures", "Only shortcuts"], 0),
+        q("A row is also called a:", ["Record", "Column", "Formula", "Slide"], 0),
+        q("A column is also called a:", ["Field", "Record", "Workbook", "Chart"], 0),
+        q("SELECT is used to:", ["Read data", "Delete database only", "Print page", "Open browser"], 0),
+        q("INSERT is used to:", ["Add data", "Show data only", "Change color", "Create slide"], 0),
+        q("UPDATE is used to:", ["Modify data", "Add monitor", "Create image", "Close app"], 0),
+        q("DELETE is used to:", ["Remove data", "Format text", "Sort slide", "Print chart"], 0),
+        q("WHERE clause is used for:", ["Condition/filter", "Page setup", "Animation", "Font color"], 0),
+        q("Primary key is used to:", ["Uniquely identify records", "Change theme", "Print table", "Open email"], 0),
+        q("Foreign key connects:", ["Related tables", "Keyboard and mouse", "Monitor and printer", "Slides only"], 0),
+        q("ORDER BY is used to:", ["Sort results", "Delete rows", "Add image", "Run browser"], 0),
+        q("GROUP BY is used to:", ["Group records", "Make heading bold", "Create slide", "Zoom page"], 0),
+        q("COUNT() is used to:", ["Count records", "Add values only", "Find smallest", "Change password"], 0),
+        q("VARCHAR stores:", ["Text", "Only whole numbers", "Only image", "Only audio"], 0),
+        q("INT stores:", ["Integer numbers", "Long text only", "Date only", "PDF"], 0),
+        q("Database backup helps to:", ["Protect data copy", "Increase monitor size", "Format document", "Start slideshow"], 0),
+        q("A query is:", ["Command/request to database", "Keyboard key", "Image file", "Printer paper"], 0)
+    ],
+    "Full Stack Development": [
+        q("Full stack development includes:", ["Frontend and backend", "Only keyboard", "Only printing", "Only hardware"], 0),
+        q("Frontend is the part users:", ["See and interact with", "Never see", "Only database stores", "Only server cools"], 0),
+        q("Backend handles:", ["Server-side logic", "Only button color", "Only image size", "Only slide design"], 0),
+        q("HTML is used for:", ["Structure", "Styling only", "Server database only", "Animation only"], 0),
+        q("CSS is used for:", ["Styling", "Database query", "Server hosting", "File backup"], 0),
+        q("JavaScript is used for:", ["Interactivity", "Only storage", "Only wiring", "Only printing"], 0),
+        q("API means:", ["Application Programming Interface", "Auto Print Image", "Advanced Power Input", "App Page Icon"], 0),
+        q("Database stores:", ["Application data", "Only colors", "Only CSS", "Only keyboard keys"], 0),
+        q("Authentication means:", ["Checking user identity", "Changing font", "Printing page", "Adding border"], 0),
+        q("Authorization means:", ["Checking user permission", "Typing password only", "Creating image", "Deleting CSS"], 0),
+        q("A server is used to:", ["Serve app/data to clients", "Only display monitor", "Only type", "Only draw"], 0),
+        q("A client is usually:", ["User browser/app", "Hard disk only", "RAM chip", "Power cable"], 0),
+        q("HTTP is used for:", ["Web communication", "Typing only", "Image compression only", "CPU cooling"], 0),
+        q("GET request is mainly used to:", ["Read data", "Delete data only", "Format text", "Print slide"], 0),
+        q("POST request is mainly used to:", ["Send/create data", "Only read data", "Zoom page", "Change monitor"], 0),
+        q("Responsive design means:", ["Works on different screen sizes", "Only desktop", "Only printing", "Only backend"], 0),
+        q("Version control tool example is:", ["Git", "Excel", "PowerPoint", "Paint"], 0),
+        q("Deployment means:", ["Publishing app for users", "Deleting app", "Typing code only", "Making table"], 0),
+        q("Bug means:", ["Error in program", "Database table only", "HTML tag", "CSS color"], 0),
+        q("Testing helps to:", ["Find and prevent errors", "Only add images", "Only increase RAM", "Only print code"], 0)
+    ]
+};
+
+let currentExamCourse = "Computer Basics";
+let examQuestions = examQuestionBanks[currentExamCourse];
+
+let examCurrentQuestion = 0;
+let examAnswers = [];
+let examSecondsLeft = 10 * 60;
+let examTimerInterval = null;
+let examSubmitted = false;
+
+function startExamPractice(courseName = currentExamCourse) {
+    currentExamCourse = courseName;
+    examQuestions = examQuestionBanks[currentExamCourse] || examQuestionBanks["Computer Basics"];
+    examCurrentQuestion = 0;
+    examAnswers = Array(examQuestions.length).fill(null);
+    examSecondsLeft = 10 * 60;
+    examSubmitted = false;
+
+    document.getElementById("examTitle").innerText = `${currentExamCourse} Exam`;
+    document.getElementById("examModal").style.display = "flex";
+    document.getElementById("examResult").style.display = "none";
+    document.getElementById("examBody").style.display = "block";
+
+    renderExamQuestion();
+    updateExamTimer();
+
+    clearInterval(examTimerInterval);
+    examTimerInterval = setInterval(() => {
+        examSecondsLeft -= 1;
+        updateExamTimer();
+
+        if (examSecondsLeft <= 0) {
+            submitExam(true);
+        }
+    }, 1000);
+}
+
+function closeExamPractice() {
+    clearInterval(examTimerInterval);
+    document.getElementById("examModal").style.display = "none";
+}
+
+function updateExamTimer() {
+    const minutes = Math.floor(Math.max(examSecondsLeft, 0) / 60);
+    const seconds = Math.max(examSecondsLeft, 0) % 60;
+    document.getElementById("examTimer").innerText = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function renderExamQuestion() {
+    const item = examQuestions[examCurrentQuestion];
+    const answeredCount = examAnswers.filter((answer) => answer !== null).length;
+
+    document.getElementById("examQuestionNumber").innerText = `Question ${examCurrentQuestion + 1} of ${examQuestions.length}`;
+    document.getElementById("examAnsweredCount").innerText = `Answered ${answeredCount}/${examQuestions.length}`;
+    document.getElementById("examQuestionText").innerText = item.question;
+
+    const currentAnswer = examAnswers[examCurrentQuestion];
+
+    document.getElementById("examOptions").innerHTML = item.options.map((option, index) => {
+        const classes = [
+            examAnswers[examCurrentQuestion] === index ? "selected" : ""
+        ].filter(Boolean).join(" ");
+
+        return `
+        <button
+            type="button"
+            class="exam-option ${classes}"
+            onclick="selectExamAnswer(${index})"
+        >
+            <span>${String.fromCharCode(65 + index)}</span>
+            ${option}
+        </button>
+    `;
+    }).join("");
+
+    document.getElementById("examQuestionMap").innerHTML = examQuestions.map((_, index) => `
+        <button
+            type="button"
+            class="${index === examCurrentQuestion ? "active" : ""} ${examAnswers[index] !== null ? "answered" : ""}"
+            onclick="goToExamQuestion(${index})"
+        >
+            ${index + 1}
+        </button>
+    `).join("");
+}
+
+function selectExamAnswer(index) {
+    if (examSubmitted) return;
+    examAnswers[examCurrentQuestion] = index;
+    renderExamQuestion();
+}
+
+function goToExamQuestion(index) {
+    examCurrentQuestion = index;
+    renderExamQuestion();
+}
+
+function previousExamQuestion() {
+    if (examCurrentQuestion > 0) {
+        examCurrentQuestion -= 1;
+        renderExamQuestion();
+    }
+}
+
+function nextExamQuestion() {
+    if (examCurrentQuestion < examQuestions.length - 1) {
+        examCurrentQuestion += 1;
+        renderExamQuestion();
+    }
+}
+
+function submitExam(autoSubmit = false) {
+    if (examSubmitted) return;
+
+    const unanswered = examAnswers.filter((answer) => answer === null).length;
+    if (!autoSubmit && unanswered > 0 && !confirm(`${unanswered} questions are unanswered. Submit now?`)) {
+        return;
+    }
+
+    examSubmitted = true;
+    clearInterval(examTimerInterval);
+
+    const score = examQuestions.reduce((total, item, index) => {
+        return total + (examAnswers[index] === item.answer ? 1 : 0);
+    }, 0);
+    const percentage = Math.round((score / examQuestions.length) * 100);
+    const message = percentage >= 80 ? "Excellent work" : percentage >= 50 ? "Good effort, revise weak topics" : "Keep practicing and try again";
+
+    document.getElementById("examBody").style.display = "none";
+    document.getElementById("examResult").style.display = "block";
+    document.getElementById("examResult").innerHTML = `
+        <h3>${currentExamCourse} - ${autoSubmit ? "Time is up" : "Exam Submitted"}</h3>
+        <div class="score-circle">${score}/${examQuestions.length}</div>
+        <p><strong>${percentage}%</strong> - ${message}</p>
+        <p>Correct answers: ${score} | Wrong answers: ${examQuestions.length - score - unanswered} | Unanswered: ${unanswered}</p>
+        <button type="button" class="exam-primary-btn" onclick="startExamPractice(currentExamCourse)">Try Again</button>
+        <button type="button" class="exam-secondary-btn" onclick="closeExamPractice()">Close</button>
+    `;
+}
+</script>
+
+</body>
+</html>

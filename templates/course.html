@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course.title }}</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #222;
+        }
+
+        .content-card {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+
+        .content-card h3 {
+            margin-top: 20px;
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>{{ course.title }}</h1>
+
+<div class="content-card">
+
+{% if course.title == "History of Computer" %}
+
+    <h2>History of Computer</h2>
+
+    <p>
+        The history of computers is a fascinating journey of human innovation and technological advancement.
+        It spans several centuries, from early calculating devices to modern-day supercomputers.
+    </p>
+
+    <h3>1. Early Calculating Devices (Pre-20th Century)</h3>
+    <p>
+        Abacus was the earliest calculating device used around 3000 BC. Later, Pascal developed Pascaline (1642)
+        and Leibniz created Stepped Reckoner (1673).
+    </p>
+
+    <h3>2. Mechanical Computers</h3>
+    <p>
+        Charles Babbage designed the Analytical Engine. Ada Lovelace became the first programmer.
+    </p>
+
+    <h3>3. Electronic Computers</h3>
+    <ul>
+        <li>ENIAC (1945)</li>
+        <li>EDVAC (1949)</li>
+        <li>UNIVAC (1951)</li>
+    </ul>
+
+    <h3>4. Generations of Computer</h3>
+    <ul>
+        <li>1st Gen – Vacuum Tubes</li>
+        <li>2nd Gen – Transistors</li>
+        <li>3rd Gen – IC</li>
+        <li>4th Gen – Microprocessor</li>
+        <li>5th Gen – AI</li>
+    </ul>
+
+{% else %}
+
+    <p>{{ course.desc }}</p>
+
+{% endif %}
+
+</div>
+
+<a href="/">⬅ Back</a>
+
+</body>
+</html>
