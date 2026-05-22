@@ -5,15 +5,18 @@ from pathlib import Path
 from flask import Flask, abort, g, jsonify, render_template, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
-# 🔥 FLASK APP
-app = Flask(__name__)
+# =========================================
+# FLASK APP
+# =========================================
 
-# ✅ IMPORTANT FOR VERCEL
-application = app
+app = Flask(__name__)
 
 DATABASE = Path(__file__).with_name("computer_course.db")
 
-# 🔥 ALL COURSES
+# =========================================
+# COURSES
+# =========================================
+
 courses = [
     {"id": 1, "title": "Computer Basics", "desc": "Learn basic computer skills"},
     {"id": 2, "title": "MS Office", "desc": "Word, Excel, PowerPoint"},
@@ -27,8 +30,11 @@ courses = [
     {"id": 10, "title": "Full Stack Development", "desc": "Complete web dev"}
 ]
 
+# =========================================
+# DATABASE FUNCTIONS
+# =========================================
 
-# 🔥 DATABASE CONNECTION
+
 def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(DATABASE)
@@ -36,15 +42,14 @@ def get_db():
     return g.db
 
 
-# 🔥 CLOSE DATABASE
 @app.teardown_appcontext
 def close_db(error=None):
     db = g.pop("db", None)
+
     if db is not None:
         db.close()
 
 
-# 🔥 INIT DATABASE
 def init_db():
     db = sqlite3.connect(DATABASE)
 
@@ -94,7 +99,6 @@ def init_db():
     db.close()
 
 
-# 🔥 GET COURSES
 def get_courses():
     rows = get_db().execute(
         "SELECT id, title, description AS desc FROM courses ORDER BY id"
@@ -102,8 +106,10 @@ def get_courses():
 
     return [dict(row) for row in rows]
 
+# =========================================
+# TOPICS DATA
+# =========================================
 
-# 🔥 COMPUTER BASICS TOPICS
 computer_topics = {
     "topics": [
         "Introduction",
@@ -115,22 +121,23 @@ computer_topics = {
 
     "content": {
 
-        "Introduction": "Computer ek electronic machine hai jo data ko process karta hai.",
+        "Introduction":
+        "Computer ek electronic machine hai jo data ko process karta hai.",
 
         "History of Computer": """
-        <h2>History of Computer</h2>
-
         <img src="https://images.unsplash.com/photo-1518770660439-4636190af475"
         style="width:100%; border-radius:10px; margin-bottom:15px;">
 
+        <h2>History of Computer</h2>
+
         <p>
-        The history of computers is a long journey from simple calculating tools
-        to modern digital machines.
+        The history of computers is a long journey from simple
+        calculating tools to modern digital machines.
         </p>
 
         <h3>1. Early Computing Devices</h3>
         <p>
-        Abacus pehla calculating device tha.
+        Abacus pehla calculating tool tha.
         </p>
 
         <h3>2. Mechanical Computers</h3>
@@ -164,16 +171,17 @@ computer_topics = {
         </p>
         """,
 
-        "Types of Computer": "Analog, Digital aur Hybrid computers hote hain.",
+        "Types of Computer":
+        "Analog, Digital aur Hybrid computers hote hain.",
 
-        "Hardware": "Hardware physical parts hote hain jaise keyboard, mouse, CPU.",
+        "Hardware":
+        "Hardware physical parts hote hain jaise keyboard, mouse, CPU.",
 
-        "Software": "Software programs hote hain jo computer ko chalate hain."
+        "Software":
+        "Software programs hote hain jo computer ko chalate hain."
     }
 }
 
-
-# 🔥 INTERNET TOPICS
 internet_topics = {
     "topics": [
         "Introduction to Internet",
@@ -242,14 +250,19 @@ internet_topics = {
     }
 }
 
+# =========================================
+# ROUTES
+# =========================================
 
-# 🔥 HOME PAGE
+
 @app.route("/")
 def home():
-    return render_template("index.html", courses=get_courses())
+    return render_template(
+        "index.html",
+        courses=get_courses()
+    )
 
 
-# 🔥 COURSE PAGE
 @app.route("/course/<int:id>")
 def course(id):
 
@@ -261,10 +274,16 @@ def course(id):
     if selected is None:
         abort(404)
 
-    return render_template("course.html", course=dict(selected))
+    return render_template(
+        "course.html",
+        course=dict(selected)
+    )
 
 
-# 🔥 REGISTER API
+# =========================================
+# REGISTER API
+# =========================================
+
 @app.route("/api/register", methods=["POST"])
 def register():
 
@@ -294,6 +313,7 @@ def register():
         db.commit()
 
     except sqlite3.IntegrityError:
+
         return jsonify({
             "error": "Username already exists."
         }), 409
@@ -303,7 +323,10 @@ def register():
     }), 201
 
 
-# 🔥 LOGIN API
+# =========================================
+# LOGIN API
+# =========================================
+
 @app.route("/api/login", methods=["POST"])
 def login():
 
@@ -313,6 +336,7 @@ def login():
     password = (data.get("password") or "").strip()
 
     if not username or not password:
+
         return jsonify({
             "error": "Username and password are required."
         }), 400
@@ -322,7 +346,10 @@ def login():
         (username,),
     ).fetchone()
 
-    if user is None or not check_password_hash(user["password_hash"], password):
+    if user is None or not check_password_hash(
+        user["password_hash"],
+        password
+    ):
 
         return jsonify({
             "error": "Wrong username or password."
@@ -333,11 +360,14 @@ def login():
         "user": {
             "id": user["id"],
             "username": user["username"]
-        },
+        }
     })
 
 
-# 🔥 GET TOPICS API
+# =========================================
+# TOPICS API
+# =========================================
+
 @app.route("/get_topics/<int:id>")
 def get_topics(id):
 
@@ -353,12 +383,18 @@ def get_topics(id):
     })
 
 
-# 🔥 INIT DATABASE
+# =========================================
+# INIT DATABASE
+# =========================================
+
 with app.app_context():
     init_db()
 
 
-# 🔥 RUN APP
+# =========================================
+# RUN APP
+# =========================================
+
 if __name__ == "__main__":
     app.run()
 ```
