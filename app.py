@@ -11,6 +11,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 
+# ✅ IMPORTANT FOR VERCEL
+application = app
+
 DATABASE = Path(__file__).with_name("computer_course.db")
 
 # =========================================
@@ -33,7 +36,6 @@ courses = [
 # =========================================
 # DATABASE FUNCTIONS
 # =========================================
-
 
 def get_db():
     if "db" not in g:
@@ -254,7 +256,6 @@ internet_topics = {
 # ROUTES
 # =========================================
 
-
 @app.route("/")
 def home():
     return render_template(
@@ -278,7 +279,6 @@ def course(id):
         "course.html",
         course=dict(selected)
     )
-
 
 # =========================================
 # REGISTER API
@@ -322,7 +322,6 @@ def register():
         "message": "Account created successfully."
     }), 201
 
-
 # =========================================
 # LOGIN API
 # =========================================
@@ -363,7 +362,6 @@ def login():
         }
     })
 
-
 # =========================================
 # TOPICS API
 # =========================================
@@ -382,14 +380,12 @@ def get_topics(id):
         "content": {}
     })
 
-
 # =========================================
 # INIT DATABASE
 # =========================================
 
 with app.app_context():
     init_db()
-
 
 # =========================================
 # RUN APP
