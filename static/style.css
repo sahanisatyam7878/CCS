@@ -467,6 +467,7 @@ body {
 
 button {
     cursor: pointer;
+    touch-action: manipulation;
 }
 
 /* HERO */
@@ -1894,20 +1895,203 @@ button {
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-    .main {
-        flex-direction: column;
+    html,
+    body {
+        min-height: 100%;
         height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    body {
+        display: block;
+    }
+
+    button,
+    input,
+    select,
+    .card,
+    .sidebar ul li {
+        -webkit-tap-highlight-color: rgba(15, 108, 189, 0.16);
+    }
+
+    .topnav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    .topnav-row {
+        align-items: stretch;
+    }
+
+    .topnav-top {
+        gap: 8px;
+    }
+
+    .left-controls,
+    .nav-right {
+        width: 100%;
+    }
+
+    .left-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .search-form {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .search-box {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .exam-nav-btn,
+    .font-picker,
+    .login-btn,
+    .dark-btn,
+    .search-btn {
+        min-height: 44px;
+    }
+
+    .font-picker {
+        justify-content: space-between;
+    }
+
+    .nav-right {
+        justify-content: space-between;
+    }
+
+    .topnav-bottom {
+        display: block;
+        overflow: hidden;
+    }
+
+    .nav-center {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 7px 6px;
+        border-radius: 8px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-center::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .nav-center::-webkit-scrollbar-thumb {
+        background: #b9d9ef;
+        border-radius: 999px;
+    }
+
+    .nav-section-title {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 0 10px;
+        background: #f8fbfd;
+        border-right: 1px solid #dbe9f2;
+    }
+
+    .nav-center button {
+        flex: 0 0 auto;
+        min-width: auto;
+        min-height: 38px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        scroll-snap-align: start;
+    }
+
+    .main {
+        display: block;
+        height: auto;
+        min-height: 0;
     }
 
     .sidebar {
         width: 100%;
         height: auto;
+        max-height: none;
+        overflow: visible;
         border-right: none;
         border-bottom: 1px solid #ddd;
+        box-shadow: none;
     }
 
     .content {
         height: auto;
+        overflow: visible;
+    }
+
+    .sidebar-header {
+        padding: 14px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar h3 {
+        font-size: 21px;
+    }
+
+    .sidebar-help {
+        font-size: 13px;
+    }
+
+    .sidebar-topics {
+        border-radius: 8px;
+        box-shadow: none;
+    }
+
+    .sidebar-topics-head {
+        padding: 10px 12px;
+    }
+
+    .sidebar ul {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar ul li {
+        flex: 0 0 auto;
+        width: min(78vw, 260px);
+        min-height: 46px;
+        margin-bottom: 0;
+        padding: 12px 12px 12px 18px;
+        border-radius: 8px;
+    }
+
+    .sidebar ul li:hover {
+        transform: none;
+    }
+
+    .course-choice {
+        align-items: flex-start;
+    }
+
+    .lesson-view,
+    .hero,
+    .card,
+    .feature-box,
+    .exam-panel,
+    .exam-card {
+        border-radius: 8px;
     }
 
     .feature-strip {
@@ -1937,33 +2121,63 @@ button {
 }
 
 @media (max-width: 700px) {
+    html {
+        overflow-y: auto;
+    }
+
     body {
-        overflow: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 
     .topnav {
+        position: static;
         height: auto;
-        flex-wrap: wrap;
+        max-height: 70vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
     }
 
-    .search-box {
-        width: 100%;
-    }
-
-    .search-form {
-        width: 100%;
-    }
-
-    .search-btn {
-        flex: 0 0 auto;
+    .topnav-row {
+        flex-direction: column;
     }
 
     .nav-right {
-        margin-left: 0;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+    }
+
+    .left-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .search-btn,
+    .exam-nav-btn,
+    .font-picker,
+    .login-btn {
+        width: 100%;
     }
 
     .hero {
-        padding: 24px;
+        padding: 20px;
+    }
+
+    .hero-image img {
+        border-radius: 8px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .card {
+        padding: 18px;
     }
 
     .exam-panel {
@@ -2032,15 +2246,141 @@ button {
     }
 
     .hero h1 {
-        font-size: 30px;
+        font-size: 28px;
     }
 
     .content {
-        padding: 18px;
+        padding: 14px;
     }
 
     .sidebar {
+        padding: 12px;
+    }
+
+    .main {
+        display: grid;
+        grid-template-columns: 118px minmax(0, 1fr);
+        align-items: start;
+        border-top: 1px solid #d7e3ec;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        height: 100vh;
+        max-height: 100vh;
+        padding: 8px;
+        overflow: hidden;
+        border-right: 1px solid #d7e3ec;
+        border-bottom: none;
+        background: #ffffff;
+    }
+
+    .sidebar-header {
+        padding: 10px 8px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+    }
+
+    .sidebar-label,
+    .sidebar-help,
+    .sidebar-topics-head {
+        display: none;
+    }
+
+    .sidebar h3 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.2;
+    }
+
+    .sidebar-topics {
+        height: calc(100vh - 72px);
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    .sidebar ul {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 7px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar ul li {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 8px 9px 12px;
+        border-radius: 7px;
+        font-size: 12px;
+        line-height: 1.25;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .sidebar ul li::before {
+        left: 4px;
+        top: 9px;
+        bottom: 9px;
+        width: 3px;
+    }
+
+    .course-choice {
+        display: block;
+    }
+
+    .course-choice-count,
+    .search-result-course {
+        display: none;
+    }
+
+    .content {
+        min-width: 0;
+        padding: 10px;
+    }
+
+    .lesson-view {
         padding: 14px;
+    }
+
+    .lesson-view h2 {
+        font-size: 20px;
+        line-height: 1.25;
+    }
+
+    .lesson-section {
+        line-height: 1.7;
+        font-size: 15px;
+    }
+
+    .lesson-section h4 {
+        font-size: 17px;
+    }
+
+    .lesson-image,
+    .content img {
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+    .lesson-section pre,
+    .table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .comparison-table {
+        min-width: 560px;
+    }
+
+    .mode-tooltip {
+        display: none;
     }
 }
 .modal {

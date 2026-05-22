@@ -1,4 +1,4 @@
-```python
+import os
 import sqlite3
 from pathlib import Path
 
@@ -14,7 +14,13 @@ app = Flask(__name__)
 # ✅ IMPORTANT FOR VERCEL
 application = app
 
-DATABASE = Path(__file__).with_name("computer_course.db")
+DEFAULT_DATABASE = (
+    "/tmp/computer_course.db"
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+    else Path(__file__).with_name("computer_course.db")
+)
+DATABASE = Path(os.environ.get("DATABASE_PATH", DEFAULT_DATABASE))
+SCHEMA_FILE = Path(__file__).with_name("schema.sql")
 
 # =========================================
 # COURSES
@@ -39,8 +45,10 @@ courses = [
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DATABASE)
+        DATABASE.parent.mkdir(parents=True, exist_ok=True)
+        g.db = sqlite3.connect(DATABASE, timeout=10)
         g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
 
 
@@ -53,38 +61,12 @@ def close_db(error=None):
 
 
 def init_db():
+    DATABASE.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(DATABASE)
 
     db.execute("PRAGMA foreign_keys = ON")
 
-    db.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL,
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS courses (
-            id INTEGER PRIMARY KEY,
-            title TEXT NOT NULL UNIQUE,
-            description TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS user_progress (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            course_id INTEGER NOT NULL,
-            topic TEXT NOT NULL,
-            completed INTEGER NOT NULL DEFAULT 0,
-            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(user_id, course_id, topic),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-        );
-        """
-    )
+    db.executescript(SCHEMA_FILE.read_text(encoding="utf-8"))
 
     db.executemany(
         """
@@ -393,4 +375,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run()
-```

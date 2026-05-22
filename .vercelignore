@@ -1,0 +1,13 @@
+.git/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+
+computer parts.PNG
+image parts of computer.jpg
+Image-2-1.jpg
+image-contact-sheet-*.png
+
+templates/images/
+templates/{{ url_for('static', filename='images\computer-intro.jpg') }}

@@ -28,7 +28,7 @@
                 <span>Font</span>
                 <select id="fontSelect" onchange="changeSiteFont(this.value)">
                     <option value="Inter">Inter</option>
-                   <option value="Inter">Times New Roman</option>
+                    <option value="Times New Roman">Times New Roman</option>
                     <option value="Nunito">Nunito</option>
                     <option value="Roboto">Roboto</option>
                     <option value="Lato">Lato</option>
@@ -523,6 +523,7 @@ function openExamPanel() {
 function changeSiteFont(fontName) {
     const fontMap = {
         Inter: '"Inter", "Segoe UI", Arial, sans-serif',
+        "Times New Roman": '"Times New Roman", Times, serif',
         Nunito: '"Nunito", "Segoe UI", Arial, sans-serif',
         Roboto: '"Roboto", "Segoe UI", Arial, sans-serif',
         Lato: '"Lato", "Segoe UI", Arial, sans-serif',

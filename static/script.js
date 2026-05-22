@@ -8377,7 +8377,11 @@ function loadContent(course, topic) {
                 ${getTopicLearningHtml(course, topic)}
             </section>
         `;
-        content.scrollTop = 0;
+        if (window.matchMedia("(max-width: 900px)").matches) {
+            content.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+            content.scrollTop = 0;
+        }
     }
 }
 
