@@ -13,7 +13,16 @@
 <div class="topnav">
     <div class="topnav-row topnav-top">
         <div class="left-controls">
-            <input type="text" placeholder="Search..." class="search-box">
+            <form class="search-form" onsubmit="searchTopics(event)">
+                <input
+                    type="search"
+                    id="topicSearch"
+                    placeholder="Search topic..."
+                    class="search-box"
+                    aria-label="Search course topics"
+                >
+                <button type="submit" class="search-btn">Search</button>
+            </form>
             <button type="button" class="exam-nav-btn" onclick="openExamPanel()">Practice & Exam</button>
             <label class="font-picker" for="fontSelect">
                 <span>Font</span>
@@ -112,50 +121,71 @@
                 </div>
             </section>
 
-            <section class="exam-panel" id="examPanel" aria-label="Exam panel">
+            <section class="exam-panel exam-locked" id="examPanel" aria-label="Exam panel">
                 <div class="exam-panel-main">
                     <div>
                         <p class="eyebrow">Practice & Exam</p>
-                        <h2>Exam Preparation Panel</h2>
+                        <h2>Smart Exam Preparation Panel</h2>
                         <p>
-                            Prepare for computer course tests with quick practice, topic revision, and beginner-friendly
-                            mock exam tasks.
+                            Practice beginner questions, switch to hard mode for deeper revision, and review every
+                            answer instantly after submission.
                         </p>
                     </div>
 
                     <div class="exam-actions">
-                        <button type="button" class="exam-primary-btn" onclick="startExamPractice('Computer Basics')">Start Practice</button>
+                        <button type="button" class="exam-primary-btn" onclick="startExamPractice('Computer Basics')">Start Mock Test</button>
+                        <button type="button" class="exam-danger-btn" onclick="startExamPractice('Hard Questions', 'hard')">Hard Questions</button>
                         <button type="button" class="exam-secondary-btn" onclick="loadCourse('Computer Basics')">Revise Topics</button>
+                    </div>
+                </div>
+
+                <div class="exam-stats" aria-label="Exam features">
+                    <div>
+                        <strong>20</strong>
+                        <span>Questions per test</span>
+                    </div>
+                    <div>
+                        <strong>10 min</strong>
+                        <span>Mock timer</span>
+                    </div>
+                    <div>
+                        <strong>12 min</strong>
+                        <span>Hard mode timer</span>
+                    </div>
+                    <div>
+                        <strong>Instant</strong>
+                        <span>Answer review</span>
                     </div>
                 </div>
 
                 <div class="exam-grid">
                     <div class="exam-card exam-card-highlight">
-                        <span class="exam-badge">Mock Test</span>
-                        <h3>All Course Test Papers</h3>
-                        <p>Every course includes a separate 20-question mock test with timer and instant result.</p>
+                        <span class="exam-badge">Challenge Mode</span>
+                        <h3>Hard Question Paper</h3>
+                        <p>Mixed advanced questions from hardware, Office, web, programming, database, and full stack topics.</p>
                         <div class="exam-meta">
                             <span>20 Questions</span>
-                            <span>10 Minutes</span>
-                            <span>Beginner</span>
+                            <span>12 Minutes</span>
+                            <span>Hard</span>
                         </div>
+                        <button type="button" class="exam-card-action" onclick="startExamPractice('Hard Questions', 'hard')">Start Hard Test</button>
                     </div>
 
                     <div class="exam-card">
-                        <span class="exam-badge">Office Skills</span>
-                        <h3>MS Office Practice</h3>
-                        <p>Revise Word, Excel, and PowerPoint basics before attempting the office tools test.</p>
+                        <span class="exam-badge">Normal Practice</span>
+                        <h3>Course Wise Mock Tests</h3>
+                        <p>Choose any subject and attempt a focused test with timer, question map, and result summary.</p>
                         <div class="exam-progress">
-                            <span>Preparation</span>
-                            <strong>72%</strong>
+                            <span>Readiness</span>
+                            <strong>80%</strong>
                         </div>
                         <div class="progress-bar">
-                            <span style="width:72%;"></span>
+                            <span style="width:80%;"></span>
                         </div>
                     </div>
 
                     <div class="exam-card">
-                        <span class="exam-badge">Quick Revision</span>
+                        <span class="exam-badge">Quick Start</span>
                         <h3>Select Test Paper</h3>
                         <div class="exam-topic-list">
                             <button type="button" onclick="startExamPractice('Computer Basics')">Computer Basics</button>
@@ -243,6 +273,7 @@
             <div>
                 <p class="eyebrow">Mock Test</p>
                 <h2 id="examTitle">Computer Basics Exam</h2>
+                <span class="exam-difficulty-pill" id="examDifficulty">Normal Level</span>
             </div>
             <div class="exam-timer" id="examTimer">10:00</div>
         </div>
@@ -320,6 +351,27 @@ window.appImagePaths = {
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 <script>
+let pendingExamAction = null;
+
+function isStudentLoggedIn() {
+    return Boolean(sessionStorage.getItem("loggedInUser"));
+}
+
+function updateExamAccess() {
+    const examPanel = document.getElementById("examPanel");
+    if (examPanel) {
+        examPanel.classList.toggle("exam-locked", !isStudentLoggedIn());
+    }
+}
+
+function requestExamLogin(action = null) {
+    pendingExamAction = action;
+    openLogin();
+    showLogin();
+    showAuthMessage("Please login first to open the exam panel.", "error");
+    return false;
+}
+
 function openLogin() {
     const modal = document.getElementById("loginModal");
     modal.style.display = "flex";
@@ -331,6 +383,7 @@ function closeLogin() {
     const modal = document.getElementById("loginModal");
     modal.style.display = "none";
     modal.setAttribute("aria-hidden", "true");
+    pendingExamAction = null;
     showAuthMessage("");
 }
 
@@ -427,14 +480,28 @@ async function loginUser() {
         }
 
         sessionStorage.setItem("loggedInUser", JSON.stringify(result.user));
+        updateExamAccess();
         showAuthMessage(result.message || "Login successful.", "success");
-        setTimeout(closeLogin, 450);
+        setTimeout(() => {
+            if (typeof pendingExamAction === "function") {
+                const action = pendingExamAction;
+                pendingExamAction = null;
+                closeLogin();
+                action();
+            } else {
+                closeLogin();
+            }
+        }, 450);
     } catch (error) {
         showAuthMessage("Server connection failed. Please try again.", "error");
     }
 }
 
 function openExamPanel() {
+    if (!isStudentLoggedIn()) {
+        return requestExamLogin(openExamPanel);
+    }
+
     const content = document.getElementById("content");
 
     if (!document.getElementById("examPanel") && typeof goHome === "function") {
@@ -475,6 +542,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     changeSiteFont(savedFont);
+    updateExamAccess();
 });
 
 const q = (question, options, answer) => ({ question, options, answer });
@@ -702,8 +770,32 @@ const examQuestionBanks = {
     ]
 };
 
+const hardExamQuestions = [
+    q("Which pair correctly matches volatile and non-volatile memory?", ["RAM is volatile, ROM is non-volatile", "ROM is volatile, RAM is non-volatile", "Hard disk is volatile, RAM is non-volatile", "Cache is non-volatile, SSD is volatile"], 0),
+    q("If a computer becomes slow when many programs are open, which resource is most likely under pressure first?", ["RAM", "Monitor brightness", "Keyboard driver", "Printer queue"], 0),
+    q("Which component performs arithmetic and logical comparisons inside the CPU?", ["ALU", "Control Unit", "Cache fan", "Power supply"], 0),
+    q("In Excel, which formula correctly adds values from A1 to A10?", ["=SUM(A1:A10)", "=ADD(A1-A10)", "=TOTAL(A1,A10)", "=COUNT(A1:A10)"], 0),
+    q("Which Excel feature is best for summarizing large data by category?", ["Pivot Table", "WordArt", "Slide Master", "Mail Merge"], 0),
+    q("In MS Word, Mail Merge is mainly used to:", ["Create personalized copies of the same document", "Compress images", "Run formulas", "Animate slides"], 0),
+    q("Which email field hides recipient addresses from other recipients?", ["BCC", "CC", "Subject", "Signature"], 0),
+    q("Which security habit best protects against phishing?", ["Check sender, URL, and unexpected attachment before acting", "Use the same password everywhere", "Disable all updates", "Open links quickly"], 0),
+    q("Which HTML element gives meaning for page navigation?", ["<nav>", "<div>", "<b>", "<br>"], 0),
+    q("Which CSS rule is most suitable for responsive layout changes?", ["@media", "@font-face", "@keyframes only", "@import only"], 0),
+    q("In CSS Flexbox, justify-content mainly controls alignment on the:", ["Main axis", "Cross axis only", "Z axis", "Text baseline only"], 0),
+    q("Which JavaScript method is commonly used to attach an event without inline HTML?", ["addEventListener()", "queryAttach()", "onStyle()", "eventPush()"], 0),
+    q("What does JSON.parse() do?", ["Converts JSON text into a JavaScript value", "Converts CSS into HTML", "Deletes a JavaScript object", "Creates a database table"], 0),
+    q("In Python, what will len([10, 20, 30]) return?", ["3", "30", "60", "Error always"], 0),
+    q("Which Python structure is best for key-value data?", ["Dictionary", "List only", "Tuple only", "String"], 0),
+    q("In C/C++, which problem can happen if an array index goes outside its valid range?", ["Undefined behavior or memory error", "Automatic sorting", "Browser refresh", "Formula recalculation"], 0),
+    q("In C++, encapsulation mainly means:", ["Keeping data and related methods together with controlled access", "Writing only comments", "Using only global variables", "Avoiding functions"], 0),
+    q("Which SQL clause filters grouped results after GROUP BY?", ["HAVING", "WHERE always", "ORDER BY", "LIMIT only"], 0),
+    q("Which key helps maintain a relationship between two database tables?", ["Foreign key", "Font key", "Shortcut key", "Animation key"], 0),
+    q("In full stack development, an API usually helps the frontend:", ["Communicate with backend services", "Change monitor resolution", "Replace HTML tags", "Format a hard disk"], 0)
+];
+
 let currentExamCourse = "Computer Basics";
 let examQuestions = examQuestionBanks[currentExamCourse];
+let currentExamMode = "normal";
 
 let examCurrentQuestion = 0;
 let examAnswers = [];
@@ -711,15 +803,22 @@ let examSecondsLeft = 10 * 60;
 let examTimerInterval = null;
 let examSubmitted = false;
 
-function startExamPractice(courseName = currentExamCourse) {
+function startExamPractice(courseName = currentExamCourse, mode = "normal") {
+    if (!isStudentLoggedIn()) {
+        return requestExamLogin(() => startExamPractice(courseName, mode));
+    }
+
     currentExamCourse = courseName;
-    examQuestions = examQuestionBanks[currentExamCourse] || examQuestionBanks["Computer Basics"];
+    currentExamMode = mode;
+    examQuestions = mode === "hard" ? hardExamQuestions : (examQuestionBanks[currentExamCourse] || examQuestionBanks["Computer Basics"]);
     examCurrentQuestion = 0;
     examAnswers = Array(examQuestions.length).fill(null);
-    examSecondsLeft = 10 * 60;
+    examSecondsLeft = (mode === "hard" ? 12 : 10) * 60;
     examSubmitted = false;
 
     document.getElementById("examTitle").innerText = `${currentExamCourse} Exam`;
+    document.getElementById("examDifficulty").innerText = mode === "hard" ? "Hard Level" : "Normal Level";
+    document.getElementById("examDifficulty").className = `exam-difficulty-pill ${mode === "hard" ? "hard" : ""}`;
     document.getElementById("examModal").style.display = "flex";
     document.getElementById("examResult").style.display = "none";
     document.getElementById("examBody").style.display = "block";
@@ -771,7 +870,7 @@ function renderExamQuestion() {
             onclick="selectExamAnswer(${index})"
         >
             <span>${String.fromCharCode(65 + index)}</span>
-            ${option}
+            ${escapeExamText(option)}
         </button>
     `;
     }).join("");
@@ -812,6 +911,15 @@ function nextExamQuestion() {
     }
 }
 
+function escapeExamText(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function submitExam(autoSubmit = false) {
     if (examSubmitted) return;
 
@@ -828,6 +936,26 @@ function submitExam(autoSubmit = false) {
     }, 0);
     const percentage = Math.round((score / examQuestions.length) * 100);
     const message = percentage >= 80 ? "Excellent work" : percentage >= 50 ? "Good effort, revise weak topics" : "Keep practicing and try again";
+    const reviewHtml = examQuestions.map((item, index) => {
+        const selectedAnswer = examAnswers[index];
+        const isUnanswered = selectedAnswer === null;
+        const isCorrect = selectedAnswer === item.answer;
+        const statusClass = isCorrect ? "correct" : isUnanswered ? "unanswered" : "wrong";
+        const statusText = isCorrect ? "Correct" : isUnanswered ? "Not answered" : "Wrong";
+        const yourAnswer = isUnanswered ? "Not answered" : item.options[selectedAnswer];
+        const correctAnswer = item.options[item.answer];
+
+        return `
+            <div class="exam-review-item ${statusClass}">
+                <div class="exam-review-head">
+                    <strong>Q${index + 1}. ${escapeExamText(item.question)}</strong>
+                    <span>${statusText}</span>
+                </div>
+                <p><b>Your answer:</b> ${escapeExamText(yourAnswer)}</p>
+                <p><b>Correct answer:</b> ${escapeExamText(correctAnswer)}</p>
+            </div>
+        `;
+    }).join("");
 
     document.getElementById("examBody").style.display = "none";
     document.getElementById("examResult").style.display = "block";
@@ -836,7 +964,11 @@ function submitExam(autoSubmit = false) {
         <div class="score-circle">${score}/${examQuestions.length}</div>
         <p><strong>${percentage}%</strong> - ${message}</p>
         <p>Correct answers: ${score} | Wrong answers: ${examQuestions.length - score - unanswered} | Unanswered: ${unanswered}</p>
-        <button type="button" class="exam-primary-btn" onclick="startExamPractice(currentExamCourse)">Try Again</button>
+        <div class="exam-review">
+            <h4>Answer Review</h4>
+            ${reviewHtml}
+        </div>
+        <button type="button" class="exam-primary-btn" onclick="startExamPractice(currentExamCourse, currentExamMode)">Try Again</button>
         <button type="button" class="exam-secondary-btn" onclick="closeExamPractice()">Close</button>
     `;
 }

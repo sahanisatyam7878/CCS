@@ -36,7 +36,8 @@ def close_db(error=None):
         db.close()
 
 
-def init_db():
+def with app.app_context():
+    init_db():
     db = sqlite3.connect(DATABASE)
     db.execute("PRAGMA foreign_keys = ON")
     db.executescript(
@@ -279,4 +280,4 @@ def get_topics(id):
 init_db()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

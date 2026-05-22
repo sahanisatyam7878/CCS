@@ -8086,6 +8086,150 @@ Object.keys(fullStackExtraContent).forEach((topic) => {
 });
 
 let homeMarkup = "";
+let currentCourse = "";
+let currentTopic = "";
+
+const topicLearningLines = [
+    "Read the definition carefully and try to explain it in your own words.",
+    "Remember the main purpose, common use, and real-life example of this topic.",
+    "Practice by writing two short notes from this lesson in a notebook.",
+    "Compare this topic with the previous topic to understand the difference clearly.",
+    "Focus on important keywords because they are useful in exams and interviews.",
+    "Make one simple diagram, table, or flow to remember the concept quickly.",
+    "Try to identify where this topic is used in school, office, business, or daily life.",
+    "Revise the examples twice so the meaning stays clear during practical work.",
+    "Write one question and answer from this topic for quick self-testing.",
+    "Before moving ahead, revise the summary and check that the basic idea is clear."
+];
+
+const courseLearningFocus = {
+    "Computer Basics": "computer fundamentals, hardware, software, and daily computer use",
+    "MS Office": "office work, document creation, spreadsheet use, and presentation skills",
+    "Internet & Email": "safe browsing, online communication, search, and email use",
+    "HTML": "web page structure, tags, elements, and page content",
+    "CSS": "web page design, layout, spacing, colors, and responsive styling",
+    "JavaScript": "web interactivity, logic, events, functions, and browser behavior",
+    "Python": "programming logic, syntax, data handling, and problem solving",
+    "C / C++": "programming basics, memory, syntax, and object-oriented concepts",
+    "Database (MySQL)": "data storage, tables, SQL commands, and database management",
+    "Full Stack Development": "frontend, backend, database, APIs, testing, and deployment"
+};
+
+function normalizeSearchText(text) {
+    return String(text || "")
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9+#]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function getSearchMatches(query) {
+    const searchText = normalizeSearchText(query);
+
+    if (!searchText) {
+        return [];
+    }
+
+    return Object.entries(topicsData)
+        .flatMap(([course, topics]) => topics.map((topic) => {
+            const topicText = normalizeSearchText(topic);
+            const courseText = normalizeSearchText(course);
+            const combinedText = `${courseText} ${topicText}`;
+
+            let rank = 10;
+            if (topicText === searchText) rank = 0;
+            else if (topicText.startsWith(searchText)) rank = 1;
+            else if (topicText.includes(searchText)) rank = 2;
+            else if (courseText === searchText) rank = 3;
+            else if (courseText.includes(searchText)) rank = 4;
+            else if (combinedText.includes(searchText)) rank = 5;
+
+            return { course, topic, rank };
+        }))
+        .filter((item) => item.rank < 10)
+        .sort((a, b) => a.rank - b.rank || a.course.localeCompare(b.course) || a.topic.localeCompare(b.topic));
+}
+
+function renderSearchResults(query) {
+    const topicList = document.getElementById("topicList");
+    if (!topicList) return [];
+
+    const matches = getSearchMatches(query);
+    topicList.innerHTML = "";
+
+    if (!normalizeSearchText(query)) {
+        if (currentCourse) {
+            loadCourse(currentCourse, null, currentTopic);
+        } else {
+            goHome();
+        }
+        return [];
+    }
+
+    updateSidebarMeta(
+        "Search Results",
+        `Topics matching "${query.trim()}". Click any topic to open it.`,
+        matches.length
+    );
+
+    if (!matches.length) {
+        topicList.innerHTML = "<li class='empty-topic'>No matching topic found</li>";
+        return [];
+    }
+
+    matches.forEach((match, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${match.topic}<span class="search-result-course">${match.course}</span>`;
+        li.onclick = () => selectSearchResult(match.course, match.topic);
+
+        if (index === 0) {
+            li.classList.add("active");
+        }
+
+        topicList.appendChild(li);
+    });
+
+    return matches;
+}
+
+function selectSearchResult(course, topic) {
+    const searchInput = document.getElementById("topicSearch");
+    if (searchInput) {
+        searchInput.value = topic;
+    }
+    loadCourse(course, null, topic);
+}
+
+function searchTopics(event) {
+    if (event) {
+        event.preventDefault();
+    }
+
+    const searchInput = document.getElementById("topicSearch");
+    const query = searchInput?.value || "";
+    const matches = getSearchMatches(query);
+
+    if (!normalizeSearchText(query)) {
+        return;
+    }
+
+    if (!matches.length) {
+        renderSearchResults(query);
+        return;
+    }
+
+    const exactMatch = matches.find((match) => normalizeSearchText(match.topic) === normalizeSearchText(query));
+    const selected = exactMatch || matches[0];
+    selectSearchResult(selected.course, selected.topic);
+}
+
+function clearTopicSearch() {
+    const searchInput = document.getElementById("topicSearch");
+    if (searchInput) {
+        searchInput.value = "";
+    }
+}
 
 function setActiveNav(course) {
     document.querySelectorAll(".course-nav-btn").forEach((btn) => {
@@ -8111,21 +8255,49 @@ function updateSidebarMeta(title, helpText, count) {
     }
 }
 
+function renderCourseChooser() {
+    const topicList = document.getElementById("topicList");
+    if (!topicList) return;
+
+    topicList.innerHTML = "";
+    Object.keys(topicsData).forEach((course) => {
+        const li = document.createElement("li");
+        li.className = "course-choice";
+
+        const name = document.createElement("span");
+        name.className = "course-choice-name";
+        name.innerText = course;
+
+        const count = document.createElement("span");
+        count.className = "course-choice-count";
+        count.innerText = `${topicsData[course].length} topics`;
+
+        li.append(name, count);
+        li.onclick = () => loadCourse(course);
+        topicList.appendChild(li);
+    });
+}
+
 function goHome() {
+    currentCourse = "";
+    currentTopic = "";
+    clearTopicSearch();
     if (homeMarkup) {
         document.getElementById("content").innerHTML = homeMarkup;
     }
-    document.getElementById("topicList").innerHTML = "<li class='empty-topic'>Select a course</li>";
+    renderCourseChooser();
     document.querySelectorAll(".course-nav-btn").forEach((btn) => btn.classList.remove("active"));
     updateSidebarMeta(
-        "Topics",
-        "Choose a course from the top menu to see its lessons here.",
-        0
+        "Choose Course",
+        "Select any course below to open its topic list.",
+        Object.keys(topicsData).length
     );
 }
 
-function loadCourse(course, event) {
+function loadCourse(course, event, selectedTopic = "") {
+    currentCourse = course;
     if (event && event.currentTarget?.dataset?.courseTitle) {
+        clearTopicSearch();
         setActiveNav(event.currentTarget.dataset.courseTitle);
     } else {
         setActiveNav(course);
@@ -8146,7 +8318,9 @@ function loadCourse(course, event) {
         return;
     }
 
-    topics.forEach((topic, index) => {
+    const topicToOpen = topics.includes(selectedTopic) ? selectedTopic : topics[0];
+
+    topics.forEach((topic) => {
         const li = document.createElement("li");
         li.innerText = topic;
 
@@ -8158,14 +8332,35 @@ function loadCourse(course, event) {
 
         topicList.appendChild(li);
 
-        if (index === 0) {
+        if (topic === topicToOpen) {
             li.classList.add("active");
             loadContent(course, topic);
         }
     });
 }
 
+function getTopicLearningHtml(course, topic) {
+    const focus = courseLearningFocus[course] || "core concepts and practical learning";
+    const lines = topicLearningLines.map((line, index) => `
+        <li><strong>Extra line ${index + 1}:</strong> ${line}</li>
+    `).join("");
+
+    return `
+        <div class="lesson-section extra-learning-section">
+            <h4>Extra Study Notes for ${topic}</h4>
+            <p>
+                This topic belongs to <strong>${course}</strong>. Keep your revision focused on ${focus}.
+            </p>
+            <ul>
+                ${lines}
+            </ul>
+        </div>
+    `;
+}
+
 function loadContent(course, topic) {
+    currentCourse = course;
+    currentTopic = topic;
     const text = contentData[course]?.[topic] || `
         <div class="lesson-section">
             <p>Content for <strong>${topic}</strong> will be added soon.</p>
@@ -8179,6 +8374,7 @@ function loadContent(course, topic) {
                 <button type="button" class="back-btn" onclick="goHome()">Back</button>
                 <h2>${course} - ${topic}</h2>
                 ${text}
+                ${getTopicLearningHtml(course, topic)}
             </section>
         `;
         content.scrollTop = 0;
@@ -8205,9 +8401,16 @@ window.addEventListener("DOMContentLoaded", () => {
     if (homeContent) {
         homeMarkup = homeContent.outerHTML;
     }
+
+    const searchInput = document.getElementById("topicSearch");
+    if (searchInput) {
+        searchInput.addEventListener("input", () => renderSearchResults(searchInput.value));
+    }
+
     updateSidebarMeta(
-        "Topics",
-        "Choose a course from the top menu to see its lessons here.",
-        0
+        "Choose Course",
+        "Select any course below to open its topic list.",
+        Object.keys(topicsData).length
     );
+    renderCourseChooser();
 });
