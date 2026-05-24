@@ -1,6 +1,6 @@
 import os
-import sqlite3
-from pathlib import Path
+import pymysql
+import os
 
 from flask import Flask, abort, g, jsonify, render_template, request
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -44,12 +44,14 @@ courses = [
 # =========================================
 
 def get_db():
-    if "db" not in g:
-        DATABASE.parent.mkdir(parents=True, exist_ok=True)
-        g.db = sqlite3.connect(DATABASE, timeout=10)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
-    return g.db
+    return pymysql.connect(
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=int(os.getenv("MYSQLPORT")),
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 
 @app.teardown_appcontext
@@ -60,24 +62,7 @@ def close_db(error=None):
         db.close()
 
 
-def init_db():
-    DATABASE.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DATABASE)
 
-    db.execute("PRAGMA foreign_keys = ON")
-
-    db.executescript(SCHEMA_FILE.read_text(encoding="utf-8"))
-
-    db.executemany(
-        """
-        INSERT INTO courses (id, title, description)
-        VALUES (:id, :title, :desc)
-        ON CONFLICT(id) DO UPDATE SET
-            title = excluded.title,
-            description = excluded.description
-        """,
-        courses,
-    )
 
     db.commit()
     db.close()
@@ -287,11 +272,16 @@ def register():
     try:
         db = get_db()
 
-        db.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (username, generate_password_hash(password)),
-        )
+       db = get_db()
+cursor = db.cursor()
 
+cursor.execute(
+    "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+    (username, generate_password_hash(password))
+)
+
+db.commit()
+db.close()
         db.commit()
 
     except sqlite3.IntegrityError:
@@ -365,9 +355,6 @@ def get_topics(id):
 # =========================================
 # INIT DATABASE
 # =========================================
-
-with app.app_context():
-    init_db()
 
 # =========================================
 # RUN APP
