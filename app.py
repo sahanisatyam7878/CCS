@@ -1,4 +1,4 @@
-```python
+```python id="finalmysqlapp001"
 import os
 import pymysql
 
@@ -15,7 +15,7 @@ app = Flask(__name__)
 application = app
 
 # =========================================
-# MYSQL DATABASE CONNECTION
+# MYSQL CONNECTION
 # =========================================
 
 def get_db():
