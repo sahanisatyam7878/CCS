@@ -1,4 +1,3 @@
-```python id="finalmysqlapp001"
 import os
 import pymysql
 
@@ -14,11 +13,78 @@ app = Flask(__name__)
 # IMPORTANT FOR VERCEL
 application = app
 
+DEFAULT_COURSES = [
+    {
+        "id": 1,
+        "title": "Computer Basics",
+        "desc": "Start with the foundations of computers, hardware, software, and storage.",
+    },
+    {
+        "id": 2,
+        "title": "MS Office",
+        "desc": "Learn Word, Excel, PowerPoint, and day-to-day office productivity skills.",
+    },
+    {
+        "id": 3,
+        "title": "Internet & Email",
+        "desc": "Understand browsing, online safety, email basics, and internet tools.",
+    },
+    {
+        "id": 4,
+        "title": "HTML",
+        "desc": "Learn the structure of web pages with HTML tags and elements.",
+    },
+    {
+        "id": 5,
+        "title": "CSS",
+        "desc": "Style web pages with layouts, colors, spacing, and responsive design.",
+    },
+    {
+        "id": 6,
+        "title": "JavaScript",
+        "desc": "Add interactivity to websites using JavaScript basics and DOM events.",
+    },
+    {
+        "id": 7,
+        "title": "Python",
+        "desc": "Learn beginner-friendly programming with Python syntax and examples.",
+    },
+    {
+        "id": 8,
+        "title": "C / C++",
+        "desc": "Learn C and C++ programming concepts with examples and syntax.",
+    },
+    {
+        "id": 9,
+        "title": "Database (MySQL)",
+        "desc": "Understand databases, tables, SQL commands, and MySQL basics.",
+    },
+    {
+        "id": 10,
+        "title": "Full Stack Development",
+        "desc": "Understand how frontend, backend, databases, APIs, and deployment work together.",
+    },
+]
+
 # =========================================
 # MYSQL CONNECTION
 # =========================================
 
 def get_db():
+    required_env = [
+        "MYSQLHOST",
+        "MYSQLUSER",
+        "MYSQLPASSWORD",
+        "MYSQLDATABASE",
+        "MYSQLPORT",
+    ]
+    missing_env = [name for name in required_env if not os.getenv(name)]
+
+    if missing_env:
+        raise RuntimeError(
+            "Missing database environment variables: " + ", ".join(missing_env)
+        )
+
     return pymysql.connect(
         host=os.getenv("MYSQLHOST"),
         user=os.getenv("MYSQLUSER"),
@@ -33,19 +99,22 @@ def get_db():
 # =========================================
 
 def get_courses():
+    try:
+        db = get_db()
+        cursor = db.cursor()
 
-    db = get_db()
-    cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, title, description AS `desc` FROM courses ORDER BY id"
+        )
 
-    cursor.execute(
-        "SELECT id, title, description AS `desc` FROM courses ORDER BY id"
-    )
+        rows = cursor.fetchall()
 
-    rows = cursor.fetchall()
+        db.close()
 
-    db.close()
+        return rows or DEFAULT_COURSES
 
-    return rows
+    except Exception:
+        return DEFAULT_COURSES
 
 # =========================================
 # COMPUTER TOPICS
@@ -213,18 +282,25 @@ def home():
 
 @app.route("/course/<int:id>")
 def course(id):
+    selected = None
 
-    db = get_db()
-    cursor = db.cursor()
+    try:
+        db = get_db()
+        cursor = db.cursor()
 
-    cursor.execute(
-        "SELECT id, title, description AS `desc` FROM courses WHERE id=%s",
-        (id,)
-    )
+        cursor.execute(
+            "SELECT id, title, description AS `desc` FROM courses WHERE id=%s",
+            (id,)
+        )
 
-    selected = cursor.fetchone()
+        selected = cursor.fetchone()
 
-    db.close()
+        db.close()
+    except Exception:
+        selected = next(
+            (course_item for course_item in DEFAULT_COURSES if course_item["id"] == id),
+            None,
+        )
 
     if selected is None:
         abort(404)
@@ -271,11 +347,23 @@ def register():
         db.commit()
         db.close()
 
-    except Exception:
+    except RuntimeError as error:
+
+        return jsonify({
+            "error": str(error)
+        }), 503
+
+    except pymysql.err.IntegrityError:
 
         return jsonify({
             "error": "Username already exists."
         }), 409
+
+    except Exception:
+
+        return jsonify({
+            "error": "Registration failed. Please try again."
+        }), 500
 
     return jsonify({
         "message": "Account created successfully."
@@ -299,17 +387,29 @@ def login():
             "error": "Username and password are required."
         }), 400
 
-    db = get_db()
-    cursor = db.cursor()
+    try:
+        db = get_db()
+        cursor = db.cursor()
 
-    cursor.execute(
-        "SELECT id, username, password_hash FROM users WHERE username=%s",
-        (username,)
-    )
+        cursor.execute(
+            "SELECT id, username, password_hash FROM users WHERE username=%s",
+            (username,)
+        )
 
-    user = cursor.fetchone()
+        user = cursor.fetchone()
 
-    db.close()
+        db.close()
+    except RuntimeError as error:
+
+        return jsonify({
+            "error": str(error)
+        }), 503
+
+    except Exception:
+
+        return jsonify({
+            "error": "Login failed. Please try again."
+        }), 500
 
     if user is None or not check_password_hash(
         user["password_hash"],
@@ -352,4 +452,3 @@ def get_topics(id):
 
 if __name__ == "__main__":
     app.run(debug=True)
-```
