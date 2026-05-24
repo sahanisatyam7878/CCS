@@ -1,8 +1,8 @@
+```python
 import os
 import pymysql
-import os
 
-from flask import Flask, abort, g, jsonify, render_template, request
+from flask import Flask, abort, jsonify, render_template, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
 # =========================================
@@ -11,36 +11,11 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 
-# ✅ IMPORTANT FOR VERCEL
+# IMPORTANT FOR VERCEL
 application = app
 
-DEFAULT_DATABASE = (
-    "/tmp/computer_course.db"
-    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
-    else Path(__file__).with_name("computer_course.db")
-)
-DATABASE = Path(os.environ.get("DATABASE_PATH", DEFAULT_DATABASE))
-SCHEMA_FILE = Path(__file__).with_name("schema.sql")
-
 # =========================================
-# COURSES
-# =========================================
-
-courses = [
-    {"id": 1, "title": "Computer Basics", "desc": "Learn basic computer skills"},
-    {"id": 2, "title": "MS Office", "desc": "Word, Excel, PowerPoint"},
-    {"id": 3, "title": "Internet & Email", "desc": "Learn browsing & email"},
-    {"id": 4, "title": "HTML", "desc": "Build web structure"},
-    {"id": 5, "title": "CSS", "desc": "Design websites"},
-    {"id": 6, "title": "JavaScript", "desc": "Make websites dynamic"},
-    {"id": 7, "title": "Python", "desc": "Programming language"},
-    {"id": 8, "title": "C / C++", "desc": "Programming basics"},
-    {"id": 9, "title": "Database (MySQL)", "desc": "Store data"},
-    {"id": 10, "title": "Full Stack Development", "desc": "Complete web dev"}
-]
-
-# =========================================
-# DATABASE FUNCTIONS
+# MYSQL DATABASE CONNECTION
 # =========================================
 
 def get_db():
@@ -53,30 +28,27 @@ def get_db():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-
-@app.teardown_appcontext
-def close_db(error=None):
-    db = g.pop("db", None)
-
-    if db is not None:
-        db.close()
-
-
-
-
-    db.commit()
-    db.close()
-
+# =========================================
+# GET COURSES
+# =========================================
 
 def get_courses():
-    rows = get_db().execute(
-        "SELECT id, title, description AS desc FROM courses ORDER BY id"
-    ).fetchall()
 
-    return [dict(row) for row in rows]
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute(
+        "SELECT id, title, description AS `desc` FROM courses ORDER BY id"
+    )
+
+    rows = cursor.fetchall()
+
+    db.close()
+
+    return rows
 
 # =========================================
-# TOPICS DATA
+# COMPUTER TOPICS
 # =========================================
 
 computer_topics = {
@@ -151,6 +123,10 @@ computer_topics = {
     }
 }
 
+# =========================================
+# INTERNET TOPICS
+# =========================================
+
 internet_topics = {
     "topics": [
         "Introduction to Internet",
@@ -220,31 +196,42 @@ internet_topics = {
 }
 
 # =========================================
-# ROUTES
+# HOME PAGE
 # =========================================
 
 @app.route("/")
 def home():
+
     return render_template(
         "index.html",
         courses=get_courses()
     )
 
+# =========================================
+# COURSE PAGE
+# =========================================
 
 @app.route("/course/<int:id>")
 def course(id):
 
-    selected = get_db().execute(
-        "SELECT id, title, description AS desc FROM courses WHERE id = ?",
-        (id,),
-    ).fetchone()
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute(
+        "SELECT id, title, description AS `desc` FROM courses WHERE id=%s",
+        (id,)
+    )
+
+    selected = cursor.fetchone()
+
+    db.close()
 
     if selected is None:
         abort(404)
 
     return render_template(
         "course.html",
-        course=dict(selected)
+        course=selected
     )
 
 # =========================================
@@ -260,31 +247,31 @@ def register():
     password = (data.get("password") or "").strip()
 
     if not username or not password:
+
         return jsonify({
             "error": "Username and password are required."
         }), 400
 
     if len(password) < 4:
+
         return jsonify({
             "error": "Password must be at least 4 characters."
         }), 400
 
     try:
+
         db = get_db()
+        cursor = db.cursor()
 
-       db = get_db()
-cursor = db.cursor()
+        cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+            (username, generate_password_hash(password))
+        )
 
-cursor.execute(
-    "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-    (username, generate_password_hash(password))
-)
-
-db.commit()
-db.close()
         db.commit()
+        db.close()
 
-    except sqlite3.IntegrityError:
+    except Exception:
 
         return jsonify({
             "error": "Username already exists."
@@ -312,10 +299,17 @@ def login():
             "error": "Username and password are required."
         }), 400
 
-    user = get_db().execute(
-        "SELECT id, username, password_hash FROM users WHERE username = ?",
-        (username,),
-    ).fetchone()
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute(
+        "SELECT id, username, password_hash FROM users WHERE username=%s",
+        (username,)
+    )
+
+    user = cursor.fetchone()
+
+    db.close()
 
     if user is None or not check_password_hash(
         user["password_hash"],
@@ -353,12 +347,9 @@ def get_topics(id):
     })
 
 # =========================================
-# INIT DATABASE
-# =========================================
-
-# =========================================
 # RUN APP
 # =========================================
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
+```
